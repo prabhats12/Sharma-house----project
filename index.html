@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpiceLane 3D — Fresh Kitchen</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --bg:#080608;--surface:#120f10;--surface2:#1c181d;--border:#2a2430;
+  --gold:#f0a500;--gold2:#ffc842;--red:#ff3d5a;--green:#00e676;
+  --text:#f8f2ff;--muted:#9080a0;--purple:#9c6bff;--orange:#ff6b35;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;cursor:pointer;}
+#cursor{display:none;}
+#cursor-ring{display:none;}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+#three-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+/* AUTH */
+#auth-screen{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;background:rgba(8,6,8,.85);backdrop-filter:blur(20px);}
+.auth-card{background:rgba(18,15,16,.92);border:1px solid rgba(240,165,0,.18);border-radius:28px;padding:52px 44px;width:420px;box-shadow:0 0 80px rgba(240,165,0,.07),0 40px 100px rgba(0,0,0,.7);position:relative;animation:authFloat 6s ease-in-out infinite;}
+.auth-card::before{content:'';position:absolute;inset:-1px;border-radius:28px;background:linear-gradient(135deg,rgba(240,165,0,.25),transparent 40%,rgba(156,107,255,.15));z-index:-1;pointer-events:none;}
+@keyframes authFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.auth-brand{font-family:'Playfair Display',serif;font-size:34px;font-weight:900;color:var(--gold);margin-bottom:4px;letter-spacing:-1px;}
+.auth-tagline{color:var(--muted);font-size:13px;margin-bottom:30px;}
+.auth-tabs{display:flex;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:22px;background:var(--surface2);}
+.auth-tab{flex:1;padding:11px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:all .25s;}
+.auth-tab.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;}
+.afield{margin-bottom:14px;}
+.afield label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px;}
+.afield input{width:100%;padding:13px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:'Outfit',sans-serif;outline:none;transition:all .2s;}
+.afield input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,165,0,.1);}
+.abtn{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-weight:800;font-size:15px;cursor:pointer;margin-top:8px;transition:all .2s;}
+.abtn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(240,165,0,.3);}
+.amsg{font-size:13px;color:var(--red);text-align:center;margin-top:10px;min-height:18px;}
+.demo-hint{text-align:center;margin-top:14px;font-size:12px;color:var(--muted);}
+.demo-hint strong{color:var(--gold);}
+
+/* APP */
+#app{display:none;min-height:100vh;position:relative;z-index:1;}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(8,6,8,.8);backdrop-filter:blur(24px);border-bottom:1px solid rgba(240,165,0,.07);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:65px;}
+.brand{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;color:var(--gold);cursor:pointer;letter-spacing:-1px;text-shadow:0 0 30px rgba(240,165,0,.35);}
+.nav-links{display:flex;gap:4px;}
+.nav-link{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;border:none;background:none;font-family:'Outfit',sans-serif;}
+.nav-link:hover,.nav-link.active{color:var(--gold);background:rgba(240,165,0,.08);}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.cart-btn{position:relative;padding:9px 18px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:12px;font-weight:800;font-size:13px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;box-shadow:0 4px 20px rgba(240,165,0,.2);}
+.cart-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(240,165,0,.35);}
+.cart-count{position:absolute;top:-7px;right:-7px;background:var(--red);color:#fff;font-size:10px;font-weight:800;width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.user-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;cursor:pointer;border:2px solid rgba(240,165,0,.25);}
+.logout-link{font-size:12px;color:var(--muted);cursor:pointer;transition:color .2s;}
+.logout-link:hover{color:var(--red);}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;padding:80px 60px;position:relative;overflow:hidden;}
+.hero-content{max-width:620px;position:relative;z-index:2;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(240,165,0,.07);border:1px solid rgba(240,165,0,.18);border-radius:20px;padding:7px 16px;font-size:12px;color:var(--gold);font-weight:600;margin-bottom:24px;letter-spacing:.3px;}
+.live-pulse{width:8px;height:8px;border-radius:50%;background:var(--red);animation:livePulse 1.5s infinite;}
+@keyframes livePulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,61,90,.4)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(255,61,90,0)}}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(48px,6.5vw,84px);font-weight:900;line-height:1.03;margin-bottom:22px;letter-spacing:-2px;}
+.hero-title .t2{display:block;color:var(--gold);font-style:italic;text-shadow:0 0 60px rgba(240,165,0,.25);}
+.hero-title .t3{display:block;background:linear-gradient(135deg,var(--purple),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:17px;color:var(--muted);line-height:1.75;margin-bottom:40px;max-width:460px;font-weight:300;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;}
+.btn-3d{padding:16px 32px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:14px;font-family:'Outfit',sans-serif;font-weight:800;font-size:15px;cursor:pointer;transition:all .25s;letter-spacing:.3px;box-shadow:0 6px 0 rgba(0,0,0,.4),0 8px 30px rgba(240,165,0,.2);}
+.btn-3d:hover{transform:translateY(-3px);box-shadow:0 9px 0 rgba(0,0,0,.4),0 15px 40px rgba(240,165,0,.3);}
+.btn-3d:active{transform:translateY(2px);box-shadow:0 3px 0 rgba(0,0,0,.4);}
+.btn-ghost{padding:16px 32px;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:14px;font-family:'Outfit',sans-serif;font-weight:600;font-size:15px;cursor:pointer;transition:all .25s;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);background:rgba(240,165,0,.05);transform:translateY(-2px);}
+.hero-stats{position:absolute;right:60px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:16px;z-index:2;}
+.hstat{background:rgba(18,15,16,.85);backdrop-filter:blur(20px);border:1px solid rgba(240,165,0,.1);border-radius:18px;padding:18px 22px;width:230px;transition:all .35s;cursor:pointer;box-shadow:0 20px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);}
+.hstat:hover{transform:translateY(-6px) rotateY(-5deg);border-color:rgba(240,165,0,.28);box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 30px rgba(240,165,0,.07);}
+.hstat:nth-child(2){margin-left:28px;}
+.hstat-icon{font-size:24px;margin-bottom:8px;}
+.hstat-val{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--gold);}
+.hstat-label{font-size:12px;color:var(--muted);margin-top:2px;}
+
+/* SECTION */
+.section{padding:70px 60px;position:relative;}
+.section-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--purple);font-weight:700;margin-bottom:10px;}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(28px,4vw,46px);font-weight:900;margin-bottom:10px;letter-spacing:-1px;}
+.section-sub{color:var(--muted);font-size:15px;margin-bottom:44px;max-width:500px;line-height:1.6;}
+.cat-pills{display:flex;gap:10px;margin-bottom:32px;flex-wrap:wrap;}
+.cat-pill{padding:9px 20px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;}
+.cat-pill:hover,.cat-pill.active{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border-color:transparent;transform:translateY(-2px);box-shadow:0 8px 20px rgba(240,165,0,.2);}
+
+/* 3D MENU CARDS */
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:24px;}
+.menu-card-3d{background:linear-gradient(145deg,rgba(28,24,29,.95),rgba(18,15,16,.98));border:1px solid rgba(240,165,0,.07);border-radius:22px;overflow:hidden;transition:all .35s cubic-bezier(.175,.885,.32,1.275);transform-style:preserve-3d;cursor:pointer;box-shadow:0 10px 40px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.04);position:relative;}
+.menu-card-3d::before{content:'';position:absolute;inset:0;border-radius:22px;background:linear-gradient(135deg,rgba(240,165,0,.05) 0%,transparent 50%);opacity:0;transition:opacity .3s;pointer-events:none;z-index:1;}
+.menu-card-3d:hover::before{opacity:1;}
+.menu-img-3d{height:170px;display:flex;align-items:center;justify-content:center;font-size:70px;background:linear-gradient(135deg,var(--surface2),var(--surface));position:relative;overflow:hidden;}
+.menu-img-3d::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.55));}
+.food-emoji{filter:drop-shadow(0 8px 16px rgba(0,0,0,.5));transition:transform .4s cubic-bezier(.175,.885,.32,1.275);}
+.menu-card-3d:hover .food-emoji{transform:scale(1.2) translateY(-6px) rotate(-8deg);}
+.veg-tag{position:absolute;top:12px;right:12px;z-index:2;padding:4px 10px;border-radius:8px;font-size:10px;font-weight:800;letter-spacing:.5px;}
+.veg-tag.v{background:rgba(0,230,118,.14);border:1px solid rgba(0,230,118,.28);color:var(--green);}
+.veg-tag.nv{background:rgba(255,61,90,.1);border:1px solid rgba(255,61,90,.28);color:var(--red);}
+.menu-body-3d{padding:20px;position:relative;z-index:2;}
+.menu-name-3d{font-size:17px;font-weight:700;margin-bottom:5px;letter-spacing:-.3px;}
+.menu-desc-3d{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.55;}
+.menu-footer-3d{display:flex;align-items:center;justify-content:space-between;}
+.menu-price-3d{font-size:20px;font-weight:900;color:var(--gold);font-family:'Playfair Display',serif;}
+.menu-price-3d sub{font-size:12px;font-weight:400;color:var(--muted);font-family:'Outfit',sans-serif;}
+.add-btn-3d{padding:9px 20px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;transition:all .25s;font-family:'Outfit',sans-serif;box-shadow:0 4px 12px rgba(240,165,0,.18);}
+.add-btn-3d:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(240,165,0,.32);}
+.add-btn-3d.added{background:linear-gradient(135deg,var(--green),#00c853);color:#000;}
+
+/* LIVE KITCHEN */
+.kitchen-section{padding:70px 60px;background:radial-gradient(ellipse at center,rgba(156,107,255,.04) 0%,transparent 70%);border-top:1px solid var(--border);}
+.live-wrap{max-width:960px;margin:0 auto;border-radius:28px;overflow:hidden;border:1px solid rgba(240,165,0,.12);box-shadow:0 0 0 1px rgba(0,0,0,.5),0 40px 80px rgba(0,0,0,.5),0 0 60px rgba(240,165,0,.04);transition:transform .5s;transform:perspective(1200px) rotateX(2deg);}
+.live-wrap:hover{transform:perspective(1200px) rotateX(0deg);}
+.live-topbar{background:rgba(18,15,16,.96);backdrop-filter:blur(20px);padding:12px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+.ldots{display:flex;gap:7px;}
+.ld{width:12px;height:12px;border-radius:50%;}
+.ld-r{background:#ff5f57;}.ld-y{background:#febc2e;}.ld-g{background:#28c840;}
+.live-url-bar{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 14px;font-size:12px;color:var(--muted);font-family:monospace;}
+.live-badge-pill{background:var(--red);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:800;display:flex;align-items:center;gap:5px;animation:livePulse 1.5s infinite;}
+.stream-area{width:100%;aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center;position:relative;}
+.stream-placeholder-3d{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);text-align:center;padding:40px;background:radial-gradient(ellipse at center,rgba(28,24,29,1) 0%,rgba(8,6,8,1) 100%);width:100%;height:100%;}
+.cam-icon{font-size:64px;animation:camFloat 3s ease-in-out infinite;}
+@keyframes camFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.stream-url-row{display:flex;gap:12px;max-width:700px;margin:28px auto 0;padding:0 20px;}
+.stream-url-row input{flex:1;padding:13px 18px;background:rgba(28,24,29,.9);border:1px solid var(--border);border-radius:14px;color:var(--text);font-size:14px;outline:none;font-family:'Outfit',sans-serif;}
+.stream-url-row input:focus{border-color:var(--gold);}
+.stream-url-row button{padding:13px 22px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;}
+
+/* CART */
+.cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:none;backdrop-filter:blur(6px);}
+.cart-overlay.open{display:block;}
+.cart-drawer{position:fixed;top:0;right:-440px;width:440px;height:100vh;background:linear-gradient(180deg,rgba(18,15,16,.98),rgba(12,10,12,.98));border-left:1px solid rgba(240,165,0,.1);z-index:501;transition:right .35s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;backdrop-filter:blur(20px);}
+.cart-drawer.open{right:0;}
+.cart-header{padding:28px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.cart-title{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;}
+.cart-close{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;cursor:pointer;color:var(--muted);font-size:18px;transition:all .2s;}
+.cart-close:hover{border-color:var(--red);color:var(--red);}
+.cart-items{flex:1;overflow-y:auto;padding:16px 24px;}
+.cart-item{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--border);}
+.cart-item-emoji{font-size:36px;flex-shrink:0;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4));}
+.cart-item-info{flex:1;}
+.cart-item-name{font-weight:700;font-size:15px;}
+.cart-item-price{font-size:13px;color:var(--gold);margin-top:3px;font-weight:600;}
+.qty-ctrl{display:flex;align-items:center;gap:10px;}
+.qty-btn{width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.qty-btn:hover{border-color:var(--gold);color:var(--gold);}
+.qty-num{font-weight:800;font-size:15px;min-width:22px;text-align:center;}
+.cart-footer{padding:22px 24px;border-top:1px solid var(--border);}
+.cart-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.cart-total-val{font-family:'Playfair Display',serif;font-weight:900;color:var(--gold);font-size:24px;}
+.checkout-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;border:none;border-radius:14px;font-family:'Outfit',sans-serif;font-weight:900;font-size:16px;cursor:pointer;transition:all .25s;box-shadow:0 6px 0 rgba(0,0,0,.3),0 10px 30px rgba(240,165,0,.18);}
+.checkout-btn:hover{transform:translateY(-2px);box-shadow:0 8px 0 rgba(0,0,0,.3),0 15px 40px rgba(240,165,0,.28);}
+.cart-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.cart-empty-icon{font-size:56px;margin-bottom:14px;display:block;}
+
+/* ORDERS */
+.orders-list{display:flex;flex-direction:column;gap:18px;}
+.order-card{background:linear-gradient(145deg,var(--surface),rgba(18,15,16,.8));border:1px solid var(--border);border-radius:20px;padding:26px;transition:all .3s;transform-style:preserve-3d;}
+.order-card:hover{transform:translateY(-4px) rotateX(1deg);border-color:rgba(240,165,0,.14);box-shadow:0 20px 50px rgba(0,0,0,.4);}
+.order-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.order-id{font-family:'Playfair Display',serif;font-size:17px;font-weight:900;}
+.order-time{font-size:12px;color:var(--muted);}
+.order-steps{display:flex;align-items:center;margin-bottom:16px;position:relative;}
+.ostep{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;position:relative;}
+.ostep-line{position:absolute;top:14px;left:55%;width:90%;height:2px;background:var(--border);z-index:0;}
+.ostep:last-child .ostep-line{display:none;}
+.ostep-line.done{background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.ostep-dot{width:28px;height:28px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:12px;z-index:1;transition:all .3s;}
+.ostep.done .ostep-dot{background:linear-gradient(135deg,var(--gold),var(--gold2));border-color:var(--gold);color:#000;box-shadow:0 0 12px rgba(240,165,0,.28);}
+.ostep.active .ostep-dot{border-color:var(--gold);animation:livePulse 1.5s infinite;}
+.ostep-label{font-size:10px;color:var(--muted);text-align:center;line-height:1.3;}
+.ostep.done .ostep-label,.ostep.active .ostep-label{color:var(--gold);}
+.order-items-txt{font-size:13px;color:var(--muted);}
+.order-total-txt{font-size:15px;font-weight:800;color:var(--gold);margin-top:6px;}
+
+/* PROFILE */
+.profile-grid{display:grid;grid-template-columns:320px 1fr;gap:24px;}
+.pcard{background:linear-gradient(145deg,var(--surface),rgba(12,10,12,.9));border:1px solid rgba(240,165,0,.08);border-radius:22px;padding:32px;transition:all .4s;transform-style:preserve-3d;}
+.pcard:hover{transform:rotateY(-3deg) rotateX(2deg);box-shadow:0 30px 60px rgba(0,0,0,.5);}
+.prof-avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:#fff;margin-bottom:18px;box-shadow:0 10px 30px rgba(156,107,255,.25);}
+.prof-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:900;}
+.prof-email{color:var(--muted);font-size:14px;margin-top:5px;}
+.prof-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px;}
+.pstat{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;}
+.pstat-val{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--gold);}
+.pstat-label{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* ADMIN */
+.admin-hdr-bar{background:linear-gradient(135deg,rgba(255,61,90,.05),rgba(156,107,255,.03));border:1px solid rgba(255,61,90,.13);border-radius:14px;padding:14px 22px;margin-bottom:28px;display:flex;align-items:center;gap:12px;color:var(--red);font-weight:700;font-size:14px;}
+.admin-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
+.astat-3d{background:linear-gradient(145deg,var(--surface),rgba(12,10,12,.8));border:1px solid rgba(240,165,0,.07);border-radius:18px;padding:22px;transition:all .35s;cursor:pointer;}
+.astat-3d:hover{transform:translateY(-6px) rotateX(5deg);box-shadow:0 20px 50px rgba(0,0,0,.5);}
+.astat-val{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;}
+.astat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-top:5px;}
+.astat-3d.a1 .astat-val{color:var(--gold);}
+.astat-3d.a2 .astat-val{color:var(--green);}
+.astat-3d.a3 .astat-val{color:var(--purple);}
+.astat-3d.a4 .astat-val{color:var(--red);}
+.admin-panels{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.admin-panel{background:linear-gradient(145deg,var(--surface),rgba(12,10,12,.8));border:1px solid var(--border);border-radius:18px;padding:24px;}
+.admin-panel-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:18px;}
+.arow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.arow:last-child{border-bottom:none;}
+.sdot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.ssel{padding:4px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px;cursor:pointer;outline:none;font-family:'Outfit',sans-serif;}
+.full-col{grid-column:1/-1;}
+
+/* TOAST */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(90px);z-index:9999;background:linear-gradient(135deg,rgba(18,15,16,.97),rgba(28,24,29,.97));border:1px solid rgba(240,165,0,.25);border-radius:16px;padding:15px 28px;font-size:14px;font-weight:600;box-shadow:0 20px 50px rgba(0,0,0,.6),0 0 30px rgba(240,165,0,.06);opacity:0;transition:all .4s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none;backdrop-filter:blur(20px);}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+/* ORDER CARD ENHANCEMENTS */
+.order-card-active{border-color:rgba(240,165,0,.2)!important;box-shadow:0 10px 40px rgba(0,0,0,.4),0 0 30px rgba(240,165,0,.05)!important;}
+.order-status-msg{font-size:13px;font-weight:600;color:var(--text);background:rgba(255,255,255,.03);border-radius:10px;padding:10px 14px;margin:12px 0;line-height:1.5;}
+
+/* LIVE KITCHEN BLOCK */
+.order-live-kitchen{margin:16px 0 8px;border:1px solid rgba(255,61,90,.3);border-radius:16px;overflow:hidden;background:rgba(255,61,90,.03);}
+.order-live-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(255,61,90,.06);border-bottom:1px solid rgba(255,61,90,.15);}
+.order-live-title{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--text);}
+.live-pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:livePulse 1.2s infinite;flex-shrink:0;}
+.order-live-badge{background:var(--red);color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;letter-spacing:1px;animation:livePulse 2s infinite;}
+.order-live-frame{width:100%;aspect-ratio:16/9;background:#000;position:relative;}
+.order-live-offline{padding:36px 20px;text-align:center;}
+.order-live-footer{display:flex;justify-content:space-between;padding:10px 16px;font-size:12px;color:var(--muted);background:rgba(0,0,0,.2);flex-wrap:wrap;gap:8px;}
+.order-live-footer strong{color:var(--gold);}
+
+/* MENU SECTION HEADERS */
+.menu-section{margin-bottom:52px;}
+.menu-section-header{display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);position:relative;}
+.menu-section-header::after{content:'';position:absolute;bottom:-1px;left:0;width:60px;height:2px;background:linear-gradient(90deg,var(--gold),transparent);}
+.menu-section-icon{font-size:30px;filter:drop-shadow(0 4px 8px rgba(240,165,0,.3));}
+.menu-section-name{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;letter-spacing:-0.5px;}
+.menu-section-count{margin-left:auto;font-size:12px;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-weight:600;}
+.menu-grid-inner{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:24px;}
+@media(max-width:900px){
+  .hero{padding:80px 24px;min-height:auto;}
+  .hero-stats{display:none;}
+  .section,.kitchen-section{padding:50px 24px;}
+  .admin-stats-grid{grid-template-columns:1fr 1fr;}
+  .admin-panels{grid-template-columns:1fr;}
+  .profile-grid{grid-template-columns:1fr;}
+  .cart-drawer{width:100%;right:-100%;}
+  .topbar{padding:0 16px;}
+  .nav-links{display:none;}
+  .menu-grid-inner{grid-template-columns:1fr;}
+}
+/* PAYMENT MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);}
+.modal-overlay.open{display:flex;}
+.pay-modal-box{background:linear-gradient(145deg,rgba(22,18,23,.98),rgba(12,10,12,.98));border:1px solid rgba(240,165,0,.15);border-radius:24px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 60px rgba(240,165,0,.05);}
+.pay-header{padding:28px 28px 20px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid var(--border);}
+.pay-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;}
+.pay-sub{color:var(--gold);font-size:14px;font-weight:700;margin-top:4px;}
+.pay-summary{padding:16px 28px;background:rgba(240,165,0,.03);border-bottom:1px solid var(--border);max-height:130px;overflow-y:auto;}
+.pay-sum-item{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:var(--muted);}
+.pay-sum-item span:last-child{color:var(--text);font-weight:600;}
+.pay-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700;padding:18px 28px 10px;}
+.pay-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 28px;}
+.pay-fields-grid .full{grid-column:1/-1;}
+.pfield{display:flex;flex-direction:column;gap:6px;}
+.pfield label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.pfield input{padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:'Outfit',sans-serif;outline:none;transition:border .2s;}
+.pfield input:focus{border-color:var(--gold);}
+.pay-methods{padding:0 28px;display:flex;flex-direction:column;gap:10px;}
+.pay-method{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;cursor:pointer;transition:all .2s;}
+.pay-method:hover{border-color:rgba(240,165,0,.3);background:rgba(240,165,0,.04);}
+.pay-method.selected{border-color:var(--gold);background:rgba(240,165,0,.07);box-shadow:0 0 20px rgba(240,165,0,.08);}
+.pm-icon{font-size:28px;flex-shrink:0;}
+.pm-info{flex:1;}
+.pm-name{font-weight:700;font-size:14px;}
+.pm-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+.pm-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:11px;}
+.pay-method.selected .pm-check{background:var(--gold);border-color:var(--gold);color:#000;}
+.pay-method.selected .pm-check::after{content:'✓';font-weight:900;}
+.pay-amsg{font-size:13px;color:var(--red);padding:0 28px;margin-top:10px;min-height:18px;}
+.pay-footer{padding:20px 28px 28px;border-top:1px solid var(--border);margin-top:16px;}
+.pay-total-row{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:4px;}
+
+/* SUCCESS */
+.success-box{background:linear-gradient(145deg,rgba(22,18,23,.98),rgba(12,10,12,.98));border:1px solid rgba(0,230,118,.2);border-radius:24px;padding:52px 44px;width:420px;max-width:95vw;text-align:center;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 60px rgba(0,230,118,.05);}
+.success-anim{font-size:72px;margin-bottom:16px;animation:successBounce .6s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes successBounce{0%{transform:scale(0)}80%{transform:scale(1.2)}100%{transform:scale(1)}}
+.success-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--green);}
+.success-sub{color:var(--muted);font-size:15px;margin-top:8px;line-height:1.6;}
+.success-id{display:inline-block;margin-top:16px;background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.25);border-radius:10px;padding:8px 20px;font-family:monospace;font-size:16px;font-weight:700;color:var(--gold);}
+
+@media(max-width:540px){.pay-fields-grid{grid-template-columns:1fr;}.pay-fields-grid .full{grid-column:1;}}
+/* ══ FOOTER ══ */
+.site-footer{position:relative;z-index:2;background:rgba(8,5,9,.97);border-top:1px solid rgba(240,165,0,.1);margin-top:60px;}
+.footer-inner{display:grid;grid-template-columns:1.4fr 1.6fr 1fr 1.4fr;gap:48px;padding:60px 60px 40px;}
+.footer-col-title{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--gold);font-weight:700;margin-bottom:20px;}
+
+/* Brand */
+.footer-logo{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;color:var(--gold);margin-bottom:10px;text-shadow:0 0 30px rgba(240,165,0,.3);}
+.footer-tagline{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:18px;}
+.footer-fssai{display:inline-flex;align-items:center;gap:10px;background:rgba(240,165,0,.06);border:1px solid rgba(240,165,0,.2);border-radius:10px;padding:8px 14px;margin-bottom:20px;}
+.fssai-badge{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#000;font-size:10px;font-weight:900;padding:3px 8px;border-radius:5px;letter-spacing:.5px;}
+.fssai-text{font-size:12px;color:var(--muted);}
+.fssai-text strong{color:var(--text);}
+.footer-socials{display:flex;gap:10px;flex-wrap:wrap;}
+.fsocial{width:40px;height:40px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;text-decoration:none;transition:all .25s;cursor:pointer;flex-shrink:0;}
+.fsocial:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.fsocial:nth-child(1):hover{border-color:#e6683c;background:rgba(220,39,67,.1);}
+.fsocial:nth-child(2):hover{border-color:#1877F2;background:rgba(24,119,242,.1);}
+.fsocial:nth-child(3):hover{border-color:#25D366;background:rgba(37,211,102,.1);}
+.fsocial:nth-child(4):hover{border-color:#FF0000;background:rgba(255,0,0,.1);}
+.fsocial:nth-child(5):hover{border-color:#aaa;background:rgba(255,255,255,.07);}
+.fsocial:nth-child(6):hover{border-color:#E34834;background:rgba(227,72,52,.1);}
+
+/* About */
+.footer-about-text{font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;}
+.footer-est{font-size:12px;color:var(--purple);font-weight:600;}
+
+/* Links */
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:10px;}
+.footer-links li a{font-size:13px;color:var(--muted);cursor:pointer;transition:color .2s;text-decoration:none;display:flex;align-items:center;gap:8px;}
+.footer-links li a:hover{color:var(--gold);}
+
+/* Contact */
+.footer-contact-list{list-style:none;display:flex;flex-direction:column;gap:16px;}
+.footer-contact-list li{display:flex;gap:12px;font-size:13px;color:var(--muted);line-height:1.6;}
+.fci{font-size:16px;flex-shrink:0;margin-top:1px;}
+.footer-contact-list a{color:var(--text);text-decoration:none;font-weight:600;transition:color .2s;}
+.footer-contact-list a:hover{color:var(--gold);}
+
+/* Bottom bar */
+.footer-bottom{border-top:1px solid rgba(255,255,255,.05);padding:18px 60px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.footer-bottom-left{font-size:12px;color:var(--muted);}
+.footer-bottom-right{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--muted);}
+
+@media(max-width:900px){
+  .footer-inner{grid-template-columns:1fr 1fr;gap:32px;padding:40px 24px 28px;}
+  .footer-bottom{padding:16px 24px;flex-direction:column;align-items:flex-start;gap:8px;}
+}
+@media(max-width:540px){
+  .footer-inner{grid-template-columns:1fr;gap:28px;padding:32px 20px 24px;}
+}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="three-canvas"></canvas>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">🍛 SpiceLane</div>
+    <div class="auth-tagline">Order fresh. Watch it cook. Love every bite.</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="authTab('login')">Login</div>
+      <div class="auth-tab" onclick="authTab('register')">Register</div>
+    </div>
+    <div class="afield"><label>Username</label><input type="text" id="au" placeholder="your_username"></div>
+    <div class="afield"><label>Password</label><input type="password" id="ap" placeholder="••••••••"></div>
+    <div class="afield" id="an-w" style="display:none"><label>Full Name</label><input type="text" id="an" placeholder="Your Name"></div>
+    <div class="afield" id="ae-w" style="display:none"><label>Email</label><input type="email" id="ae" placeholder="you@email.com"></div>
+    <button class="abtn" id="asub" onclick="doAuth()">Login</button>
+    <div class="amsg" id="amsg"></div>
+    <div class="demo-hint">Demo: <strong>admin/admin123</strong> or <strong>user1/pass123</strong></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="brand" onclick="goPage('home')">🍛 SpiceLane</div>
+    <div class="nav-links">
+      <button class="nav-link active" onclick="goPage('home')">Home</button>
+      <button class="nav-link" onclick="goPage('menu')">Menu</button>
+      <button class="nav-link" onclick="goPage('kitchen')">🎥 Live Kitchen</button>
+      <button class="nav-link" onclick="goPage('orders')">My Orders</button>
+      <button class="nav-link" onclick="goPage('profile')">Profile</button>
+      <button class="nav-link" id="admin-nav" style="display:none;color:var(--red)" onclick="goPage('admin')">⚙ Admin</button>
+    </div>
+    <div class="topbar-right">
+      <button class="cart-btn" onclick="toggleCart()">🛒 Cart <span class="cart-count" id="cart-count">0</span></button>
+      <div class="user-av" id="top-av">?</div>
+      <span class="logout-link" onclick="doLogout()">Logout</span>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-content">
+        <div class="hero-badge"><div class="live-pulse"></div>Live Kitchen · Watch Your Food Cook</div>
+        <div class="hero-title">
+          Fresh Food,
+          <span class="t2">Transparent</span>
+          <span class="t3">Kitchen.</span>
+        </div>
+        <div class="hero-sub">Order from our curated menu and watch our chefs prepare your meal live via kitchen camera. No secrets — just extraordinary food crafted with love.</div>
+        <div class="hero-btns">
+          <button class="btn-3d" onclick="goPage('menu')">Order Now 🍽️</button>
+          <button class="btn-ghost" onclick="goPage('kitchen')">Watch Kitchen 🎥</button>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-icon">🍽️</div><div class="hstat-val">47+</div><div class="hstat-label">Orders Today</div></div>
+        <div class="hstat"><div class="hstat-icon">🟢</div><div class="hstat-val">Live</div><div class="hstat-label">Kitchen Active</div></div>
+        <div class="hstat"><div class="hstat-icon">⚡</div><div class="hstat-val">25 min</div><div class="hstat-label">Avg Delivery</div></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-eyebrow">Most Loved</div>
+      <div class="section-title">Popular Right Now 🔥</div>
+      <div class="section-sub">Our best-selling dishes — crafted fresh every single day</div>
+      <div class="menu-grid" id="home-popular"></div>
+    </div>
+  </div>
+
+  <!-- MENU -->
+  <div class="page" id="page-menu">
+    <div class="section">
+      <div class="section-eyebrow">Full Menu</div>
+      <div class="section-title">Our Kitchen Menu</div>
+      <div class="section-sub">Every dish made from scratch with premium ingredients</div>
+      <div class="cat-pills" id="cat-pills"></div>
+      <div id="menu-grid" class="menu-grid"></div>
+    </div>
+  </div>
+
+  <!-- KITCHEN -->
+  <div class="page" id="page-kitchen">
+    <div class="kitchen-section">
+      <div class="section-eyebrow">Transparency First</div>
+      <div class="section-title">🎥 Live Kitchen Camera</div>
+      <div class="section-sub">Watch our chefs prepare your food in real-time — no secrets, just great cooking</div>
+      <div class="live-wrap">
+        <div class="live-topbar">
+          <div class="ldots"><div class="ld ld-r"></div><div class="ld ld-y"></div><div class="ld ld-g"></div></div>
+          <div class="live-url-bar" id="stream-url-display">No stream connected</div>
+          <div class="live-badge-pill"><div class="ld ld-r" style="width:7px;height:7px;animation:livePulse 1.5s infinite"></div> LIVE</div>
+        </div>
+        <div class="stream-area" id="stream-area">
+          <div class="stream-placeholder-3d">
+            <div class="cam-icon">📹</div>
+            <div style="font-size:18px;font-weight:700;color:var(--text)">Kitchen Stream Offline</div>
+            <div style="font-size:14px;max-width:340px;line-height:1.6">Paste a YouTube Live embed URL below to start broadcasting your kitchen live</div>
+          </div>
+        </div>
+      </div>
+      <div class="stream-url-row">
+        <input type="text" id="stream-input" placeholder="https://www.youtube.com/embed/YOUR_LIVE_VIDEO_ID">
+        <button onclick="loadStream()">▶ Go Live</button>
+      </div>
+      <div style="margin-top:14px;color:var(--muted);font-size:13px;text-align:center">💡 YouTube Studio → Go Live → Share → Copy Embed URL</div>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="page" id="page-orders">
+    <div class="section">
+      <div class="section-eyebrow">Track Your Food</div>
+      <div class="section-title">My Orders 🛵</div>
+      <div class="section-sub">Real-time status — from kitchen to your doorstep</div>
+      <div class="orders-list" id="orders-list"></div>
+    </div>
+  </div>
+
+  <!-- PROFILE -->
+  <div class="page" id="page-profile">
+    <div class="section">
+      <div class="section-eyebrow">Your Account</div>
+      <div class="section-title">Profile</div>
+      <div class="profile-grid">
+        <div>
+          <div class="pcard">
+            <div class="prof-avatar" id="prof-av">?</div>
+            <div class="prof-name" id="prof-name">—</div>
+            <div class="prof-email" id="prof-email">—</div>
+            <div class="prof-stats">
+              <div class="pstat"><div class="pstat-val" id="prof-orders">0</div><div class="pstat-label">Orders</div></div>
+              <div class="pstat"><div class="pstat-val" id="prof-spent">₹0</div><div class="pstat-label">Spent</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="pcard">
+          <div style="font-size:15px;font-weight:700;margin-bottom:18px">Recent Orders</div>
+          <div id="prof-recent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN -->
+  <div class="page" id="page-admin">
+    <div class="section">
+      <div class="admin-hdr-bar">⚙️ Restaurant Owner Panel — Full Control Dashboard</div>
+      <div class="admin-stats-grid">
+        <div class="astat-3d a1"><div class="astat-val" id="adm-o">0</div><div class="astat-label">Total Orders</div></div>
+        <div class="astat-3d a2"><div class="astat-val" id="adm-r">₹0</div><div class="astat-label">Revenue</div></div>
+        <div class="astat-3d a3"><div class="astat-val" id="adm-u">0</div><div class="astat-label">Registered Users</div></div>
+        <div class="astat-3d a4"><div class="astat-val" id="adm-p">0</div><div class="astat-label">Pending Orders</div></div>
+      </div>
+      <!-- Active users + Excel export row -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.15);border-radius:12px;padding:12px 20px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:var(--green);animation:livePulse 1.5s infinite"></div>
+          <span style="font-size:14px;font-weight:600;color:var(--green)"><span id="adm-active">0</span> users currently online</span>
+        </div>
+        <button class="btn-3d" style="padding:12px 24px;font-size:13px;" onclick="exportToExcel()">📊 Export to Excel</button>
+      </div>
+      <div class="admin-panels">
+        <div class="admin-panel"><div class="admin-panel-title">📋 All Orders</div><div id="admin-orders"></div></div>
+        <div class="admin-panel"><div class="admin-panel-title">👤 Users</div><div id="admin-users"></div></div>
+        <div class="admin-panel full-col">
+          <div class="admin-panel-title">🎥 Stream Control</div>
+          <input type="text" id="admin-stream" placeholder="YouTube Live Embed URL" style="width:100%;padding:13px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;outline:none;font-family:'Outfit',sans-serif;margin-bottom:12px;">
+          <button class="btn-3d" style="width:100%" onclick="adminStream()">Set Live Stream</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-inner">
+
+    <!-- Brand Column -->
+    <div class="footer-col footer-brand-col">
+      <div class="footer-logo">🍛 SpiceLane</div>
+      <div class="footer-tagline">Order fresh. Watch it cook.<br>Love every bite.</div>
+      <div class="footer-fssai">
+        <span class="fssai-badge">FSSAI</span>
+        <span class="fssai-text">Lic. No. <strong>1234565678</strong></span>
+      </div>
+      <div class="footer-socials">
+        <a class="fsocial" href="https://instagram.com/spicelane" target="_blank" title="Instagram">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#f09433"/><stop offset="25%" style="stop-color:#e6683c"/><stop offset="50%" style="stop-color:#dc2743"/><stop offset="75%" style="stop-color:#cc2366"/><stop offset="100%" style="stop-color:#bc1888"/></linearGradient></defs>
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#ig)" stroke-width="2" fill="none"/>
+            <circle cx="12" cy="12" r="4.5" stroke="url(#ig)" stroke-width="2" fill="none"/>
+            <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig)"/>
+          </svg>
+        </a>
+        <a class="fsocial" href="https://facebook.com/spicelane" target="_blank" title="Facebook">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.514c-1.491 0-1.956.93-1.956 1.883v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+          </svg>
+        </a>
+        <a class="fsocial" href="https://wa.me/911234565678" target="_blank" title="WhatsApp">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+        </a>
+        <a class="fsocial" href="https://youtube.com/@spicelane" target="_blank" title="YouTube">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#FF0000" xmlns="http://www.w3.org/2000/svg">
+            <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </a>
+        <a class="fsocial" href="https://twitter.com/spicelane" target="_blank" title="X (Twitter)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+        <a class="fsocial" href="https://zomato.com/spicelane" target="_blank" title="Zomato" style="background:#1a0a0a;border-color:rgba(227,72,52,.3);">
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#E34834" d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.5 16.5h-11l7-9H6.5v-3h11l-7 9h7v3z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- About Column -->
+    <div class="footer-col">
+      <div class="footer-col-title">About Us</div>
+      <p class="footer-about-text">
+        SpiceLane was founded in 2018 with one simple dream — to bring the
+        warmth of home-cooked Indian food to every doorstep. Our chefs use
+        fresh, locally sourced ingredients, traditional recipes, and zero
+        shortcuts. Every dish is made with love, served with care.
+      </p>
+      <div class="footer-est">🏆 Est. 2018 &nbsp;·&nbsp; 50,000+ Happy Customers</div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="footer-col">
+      <div class="footer-col-title">Quick Links</div>
+      <ul class="footer-links">
+        <li><a onclick="goPage('home')">🏠 Home</a></li>
+        <li><a onclick="goPage('menu')">🍛 Full Menu</a></li>
+        <li><a onclick="goPage('kitchen')">📹 Live Kitchen</a></li>
+        <li><a onclick="goPage('orders')">🛵 Track Order</a></li>
+        <li><a onclick="goPage('profile')">👤 My Profile</a></li>
+      </ul>
+    </div>
+
+    <!-- Contact Column -->
+    <div class="footer-col">
+      <div class="footer-col-title">Contact & Address</div>
+      <ul class="footer-contact-list">
+        <li>
+          <span class="fci">📍</span>
+          <span>12, Spice Lane Road, Chandni Chowk,<br>New Delhi – 110006, India</span>
+        </li>
+        <li>
+          <span class="fci">📞</span>
+          <span><a href="tel:+911234565678">+91 12345 65678</a><br>
+          <span style="font-size:11px;color:var(--muted)">Mon–Sun, 10 AM – 11 PM</span></span>
+        </li>
+        <li>
+          <span class="fci">📧</span>
+          <span><a href="mailto:hello@spicelane.in">hello@spicelane.in</a></span>
+        </li>
+        <li>
+          <span class="fci">🛵</span>
+          <span>Free delivery within 5 km<br>
+          <span style="font-size:11px;color:var(--muted)">Avg. delivery: 30–40 min</span></span>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="footer-bottom">
+    <div class="footer-bottom-left">
+      © 2025 SpiceLane. All rights reserved. &nbsp;·&nbsp;
+      FSSAI Lic. No. <strong style="color:var(--gold)">1234565678</strong>
+    </div>
+    <div class="footer-bottom-right">
+      <span>🔒 Secure Payments</span>
+      <span>·</span>
+      <span>🚚 Fast Delivery</span>
+      <span>·</span>
+      <span>🌿 100% Fresh</span>
+    </div>
+  </div>
+</footer>
+
+<!-- CART -->
+<div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="cart-header">
+    <div class="cart-title">🛒 Your Cart</div>
+    <button class="cart-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-items" id="cart-items-el"></div>
+  <div class="cart-footer">
+    <div class="cart-total"><span style="font-size:14px;color:var(--muted)">Total Amount</span><span class="cart-total-val" id="cart-total-el">₹0</span></div>
+    <button class="checkout-btn" onclick="placeOrder()">Place Order 🚀</button>
+  </div>
+</div>
+<div id="toast"></div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="pay-modal">
+  <div class="pay-modal-box">
+    <div class="pay-header">
+      <div>
+        <div class="pay-title">💳 Checkout</div>
+        <div class="pay-sub" id="pay-amount-display">Total: ₹0</div>
+      </div>
+      <button class="cart-close" onclick="closePayModal()">✕</button>
+    </div>
+
+    <!-- ORDER SUMMARY -->
+    <div class="pay-summary" id="pay-summary"></div>
+
+    <!-- DELIVERY DETAILS -->
+    <div class="pay-section-title">📍 Delivery Details</div>
+    <div class="pay-fields-grid">
+      <div class="pfield full"><label>Full Name</label><input type="text" id="pay-name" placeholder="Your name"></div>
+      <div class="pfield full"><label>Delivery Address</label><input type="text" id="pay-addr" placeholder="House no, Street, Area, City"></div>
+      <div class="pfield"><label>Phone</label><input type="tel" id="pay-phone" placeholder="+91 98765 43210"></div>
+      <div class="pfield"><label>Pincode</label><input type="text" id="pay-pin" placeholder="110001"></div>
+    </div>
+
+    <!-- PAYMENT METHOD -->
+    <div class="pay-section-title">💰 Payment Method</div>
+    <div class="pay-methods">
+
+      <div class="pay-method" id="pm-upi" onclick="selectPay('upi')">
+        <div class="pm-icon">📱</div>
+        <div class="pm-info">
+          <div class="pm-name">UPI</div>
+          <div class="pm-sub">GPay, PhonePe, BHIM</div>
+        </div>
+        <div class="pm-check" id="chk-upi"></div>
+      </div>
+
+      <div class="pay-method" id="pm-paytm" onclick="selectPay('paytm')">
+        <div class="pm-icon" style="background:linear-gradient(135deg,#00B9F1,#0066CC);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;">Pay<br>tm</div>
+        <div class="pm-info">
+          <div class="pm-name">Paytm</div>
+          <div class="pm-sub">Paytm Wallet / UPI</div>
+        </div>
+        <div class="pm-check" id="chk-paytm"></div>
+      </div>
+
+      <div class="pay-method" id="pm-card" onclick="selectPay('card')">
+        <div class="pm-icon">💳</div>
+        <div class="pm-info">
+          <div class="pm-name">Credit / Debit Card</div>
+          <div class="pm-sub">Visa, Mastercard, RuPay</div>
+        </div>
+        <div class="pm-check" id="chk-card"></div>
+      </div>
+
+      <div class="pay-method" id="pm-netbank" onclick="selectPay('netbank')">
+        <div class="pm-icon">🏦</div>
+        <div class="pm-info">
+          <div class="pm-name">Net Banking</div>
+          <div class="pm-sub">All major Indian banks</div>
+        </div>
+        <div class="pm-check" id="chk-netbank"></div>
+      </div>
+
+      <div class="pay-method" id="pm-cod" onclick="selectPay('cod')">
+        <div class="pm-icon">💵</div>
+        <div class="pm-info">
+          <div class="pm-name">Cash on Delivery</div>
+          <div class="pm-sub">Pay when food arrives</div>
+        </div>
+        <div class="pm-check" id="chk-cod"></div>
+      </div>
+    </div>
+
+    <!-- CARD DETAILS (shown for card) -->
+    <div id="card-details-section" style="display:none;margin-top:16px;">
+      <div class="pay-fields-grid">
+        <div class="pfield full"><label>Card Number</label><input type="text" id="card-num" placeholder="1234 5678 9012 3456" maxlength="19" oninput="fmtCard(this)"></div>
+        <div class="pfield"><label>Expiry</label><input type="text" id="card-exp" placeholder="MM/YY" maxlength="5"></div>
+        <div class="pfield"><label>CVV</label><input type="text" id="card-cvv" placeholder="123" maxlength="3"></div>
+        <div class="pfield full"><label>Name on Card</label><input type="text" id="card-name" placeholder="As printed on card"></div>
+      </div>
+    </div>
+
+    <!-- UPI ID (shown for UPI) -->
+    <div id="upi-section" style="display:none;margin-top:16px;">
+      <div class="pfield full"><label>UPI ID</label><input type="text" id="upi-id" placeholder="yourname@upi or phone@gpay"></div>
+    </div>
+
+    <!-- PAYTM (shown for paytm) -->
+    <div id="paytm-section" style="display:none;margin-top:16px;">
+      <div class="pfield full"><label>Paytm Mobile Number</label><input type="tel" id="paytm-num" placeholder="+91 98765 43210"></div>
+    </div>
+
+    <!-- NETBANK -->
+    <div id="netbank-section" style="display:none;margin-top:16px;">
+      <div class="pfield full">
+        <label>Select Bank</label>
+        <select id="bank-sel" style="width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;outline:none;font-family:'Outfit',sans-serif;">
+          <option value="">-- Choose your bank --</option>
+          <option>State Bank of India</option>
+          <option>HDFC Bank</option>
+          <option>ICICI Bank</option>
+          <option>Axis Bank</option>
+          <option>Kotak Mahindra Bank</option>
+          <option>Punjab National Bank</option>
+          <option>Bank of Baroda</option>
+          <option>Yes Bank</option>
+          <option>IndusInd Bank</option>
+          <option>IDFC First Bank</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pay-amsg" id="pay-msg"></div>
+
+    <div class="pay-footer">
+      <div class="pay-total-row">
+        <span>Subtotal</span><span id="pay-sub-amt">₹0</span>
+      </div>
+      <div class="pay-total-row">
+        <span>Delivery Fee</span><span style="color:var(--green)">FREE</span>
+      </div>
+      <div class="pay-total-row" style="font-size:16px;font-weight:800;margin-top:8px;padding-top:10px;border-top:1px solid var(--border);">
+        <span>Total Payable</span><span style="color:var(--gold)" id="pay-final-amt">₹0</span>
+      </div>
+      <button class="checkout-btn" style="margin-top:16px" onclick="confirmPayment()" id="pay-confirm-btn">Pay Now 🔐</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="success-modal">
+  <div class="success-box">
+    <div class="success-anim" id="success-anim">✅</div>
+    <div class="success-title">Order Confirmed! 🎉</div>
+    <div class="success-sub" id="success-sub">Your food is being prepared.</div>
+    <div class="success-id" id="success-id">ORD-000</div>
+    <button class="btn-3d" style="margin-top:24px;width:100%" onclick="closeSuccess()">Track My Order 🛵</button>
+  </div>
+</div>
+
+<script>
+// ══ CURSOR ══
+const cur=document.getElementById('cursor'),ring=document.getElementById('cursor-ring');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.left=(mx-5)+'px';cur.style.top=(my-5)+'px';
+});
+(function ar(){rx+=(mx-rx)*.1;ry+=(my-ry)*.1;ring.style.left=(rx-17)+'px';ring.style.top=(ry-17)+'px';requestAnimationFrame(ar);})();
+
+// ══ THREE.JS ══
+(function(){
+  const canvas=document.getElementById('three-canvas');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,window.innerWidth/window.innerHeight,.1,200);
+  camera.position.z=30;
+
+  // Particle field
+  const N=700,pos=new Float32Array(N*3),col=new Float32Array(N*3),sz=new Float32Array(N);
+  const PC=[new THREE.Color('#f0a500'),new THREE.Color('#9c6bff'),new THREE.Color('#ff3d5a'),new THREE.Color('#00e676')];
+  for(let i=0;i<N;i++){
+    pos[i*3]=(Math.random()-.5)*130;
+    pos[i*3+1]=(Math.random()-.5)*90;
+    pos[i*3+2]=(Math.random()-.5)*70;
+    const c=PC[i%4];col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;
+    sz[i]=Math.random()*1.8+.4;
+  }
+  const pg=new THREE.BufferGeometry();
+  pg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  pg.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const pm=new THREE.PointsMaterial({size:.22,vertexColors:true,transparent:true,opacity:.55,sizeAttenuation:true});
+  scene.add(new THREE.Points(pg,pm));
+
+  // Torus rings
+  const rings=[];
+  for(let i=0;i<5;i++){
+    const g=new THREE.TorusGeometry(6+i*2,.05,8,64);
+    const m=new THREE.MeshBasicMaterial({color:i%2===0?0xf0a500:0x9c6bff,transparent:true,opacity:.05});
+    const r=new THREE.Mesh(g,m);
+    r.position.set((Math.random()-.5)*50,(Math.random()-.5)*35,(Math.random()-.5)*25-15);
+    r.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,0);
+    scene.add(r);rings.push(r);
+  }
+
+  // Wireframe icosahedrons
+  const icos=[];
+  const iC=[0xf0a500,0x9c6bff,0xff3d5a,0x00e676,0xff6b35];
+  for(let i=0;i<7;i++){
+    const g=new THREE.IcosahedronGeometry(1.5+Math.random()*2,0);
+    const m=new THREE.MeshBasicMaterial({color:iC[i%5],wireframe:true,transparent:true,opacity:.055});
+    const mesh=new THREE.Mesh(g,m);
+    mesh.position.set((Math.random()-.5)*100,(Math.random()-.5)*60,(Math.random()-.5)*40-10);
+    scene.add(mesh);
+    icos.push({mesh,sx:.001+Math.random()*.003,sy:.001+Math.random()*.002});
+  }
+
+  let mouseX=0,mouseY=0,t=0;
+  document.addEventListener('mousemove',e=>{mouseX=(e.clientX/window.innerWidth-.5)*2;mouseY=-(e.clientY/window.innerHeight-.5)*2;});
+
+  function animate(){
+    requestAnimationFrame(animate);t+=.004;
+    camera.position.x+=(mouseX*4-camera.position.x)*.03;
+    camera.position.y+=(mouseY*2.5-camera.position.y)*.03;
+    camera.lookAt(0,0,0);
+    rings.forEach((r,i)=>{r.rotation.x+=.0015+i*.0005;r.rotation.y+=.002;r.position.y=Math.sin(t+i*1.2)*4;});
+    icos.forEach(x=>{x.mesh.rotation.x+=x.sx;x.mesh.rotation.y+=x.sy;});
+    const p=pg.attributes.position.array;
+    for(let i=0;i<N;i++)p[i*3+1]+=Math.sin(t+i*.08)*.004;
+    pg.attributes.position.needsUpdate=true;
+    renderer.render(scene,camera);
+  }
+  animate();
+  window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+})();
+
+// ══ DATABASE ══
+// ── DEFAULT USERS (only used if no saved DB exists) ──
+const DEFAULT_USERS = [
+  {id:1,username:'admin',password:'admin123',name:'Admin Chef',email:'admin@spicelane.com',role:'admin',joinedAt:new Date(Date.now()-864e5*30).toISOString(),loginCount:0,lastLogin:null,online:false},
+  {id:2,username:'user1',password:'pass123',name:'Arjun Singh',email:'arjun@email.com',role:'user',joinedAt:new Date(Date.now()-864e5*5).toISOString(),loginCount:0,lastLogin:null,online:false}
+];
+
+const DB={
+  users: JSON.parse(JSON.stringify(DEFAULT_USERS)),
+  menu:[
+    // ── STARTERS ──
+    {id:1,name:'Chicken Tikka',img:'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80',cat:'Starters',price:199,desc:'Boneless chicken chunks marinated in spiced yogurt, grilled in tandoor',veg:false,popular:true,rating:4.8,serves:'4 pieces'},
+    {id:2,name:'Paneer Tikka',img:'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400&q=80',cat:'Starters',price:179,desc:'Chargrilled cottage cheese with peppers & onions, smoky & juicy',veg:true,popular:true,rating:4.7,serves:'4 pieces'},
+    {id:3,name:'Veg Spring Rolls',img:'https://images.unsplash.com/photo-1544361526-2f4e7a986b76?w=400&q=80',cat:'Starters',price:129,desc:'Crispy golden rolls stuffed with spiced cabbage, carrot & noodles',veg:true,popular:false,rating:4.4,serves:'4 pieces'},
+    {id:4,name:'Chicken Wings',img:'https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=400&q=80',cat:'Starters',price:229,desc:'Crispy fried wings tossed in tangy chilli garlic sauce',veg:false,popular:true,rating:4.6,serves:'6 pieces'},
+    // ── MAIN COURSE ──
+    {id:5,name:'Butter Chicken',img:'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&q=80',cat:'Main Course',price:249,desc:'Tender chicken in rich, velvety tomato-cream sauce — our #1 bestseller',veg:false,popular:true,rating:4.8,serves:'1 person'},
+    {id:6,name:'Paneer Tikka Masala',img:'https://images.unsplash.com/photo-1645177628172-a94c1f96e6db?w=400&q=80',cat:'Main Course',price:219,desc:'Chargrilled paneer cubes in smoky spiced masala gravy',veg:true,popular:true,rating:4.7,serves:'1 person'},
+    {id:7,name:'Dal Makhani',img:'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=80',cat:'Main Course',price:169,desc:'Slow-cooked black lentils simmered overnight with butter & cream',veg:true,popular:false,rating:4.6,serves:'1 person'},
+    {id:8,name:'Palak Paneer',img:'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400&q=80',cat:'Main Course',price:199,desc:'Cottage cheese cubes in a silky, spiced fresh spinach gravy',veg:true,popular:false,rating:4.7,serves:'1 person'},
+    {id:9,name:'Seekh Kebab',img:'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&q=80',cat:'Main Course',price:229,desc:'Juicy minced lamb & chicken skewers grilled over live charcoal',veg:false,popular:false,rating:4.6,serves:'4 pieces'},
+    {id:10,name:'Tandoori Chicken',img:'https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?w=400&q=80',cat:'Main Course',price:259,desc:'Whole chicken marinated in yogurt & spices, roasted in clay oven',veg:false,popular:true,rating:4.9,serves:'Half portion'},
+    // ── RICE & BIRYANI ──
+    {id:11,name:'Chicken Biryani',img:'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&q=80',cat:'Rice & Biryani',price:199,desc:'Slow-cooked aromatic basmati layered with tender chicken & saffron',veg:false,popular:true,rating:4.9,serves:'1–2 persons'},
+    {id:12,name:'Veg Biryani',img:'https://images.unsplash.com/photo-1645177628172-a94c1f96e6db?w=400&q=80',cat:'Rice & Biryani',price:169,desc:'Fragrant basmati rice with seasonal vegetables, saffron & whole spices',veg:true,popular:false,rating:4.5,serves:'1 person'},
+    {id:13,name:'Mutton Biryani',img:'https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400&q=80',cat:'Rice & Biryani',price:279,desc:'Tender slow-cooked mutton pieces in long-grain basmati, dum style',veg:false,popular:true,rating:4.9,serves:'1–2 persons'},
+    {id:14,name:'Veg Fried Rice',img:'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80',cat:'Rice & Biryani',price:139,desc:'Wok-tossed rice with fresh vegetables, soy sauce & sesame oil',veg:true,popular:false,rating:4.3,serves:'1 person'},
+    // ── STREET FOOD ──
+    {id:15,name:'Pav Bhaji',img:'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400&q=80',cat:'Street Food',price:99,desc:'Spiced mashed vegetable curry served with buttered pav buns',veg:true,popular:true,rating:4.8,serves:'2 pav + bhaji'},
+    {id:16,name:'Chole Bhature',img:'https://images.unsplash.com/photo-1626132647523-66c2f2c7b6b2?w=400&q=80',cat:'Street Food',price:119,desc:'Fluffy deep-fried bread with spicy tangy chickpea curry',veg:true,popular:true,rating:4.7,serves:'2 bhature + chole'},
+    {id:17,name:'Samosa (2 pcs)',img:'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80',cat:'Street Food',price:49,desc:'Golden crispy pastry stuffed with spiced potato & peas, with mint chutney',veg:true,popular:false,rating:4.5,serves:'2 pieces'},
+    {id:18,name:'Dahi Puri',img:'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400&q=80',cat:'Street Food',price:89,desc:'Crispy puri shells filled with curd, chutney & crunchy sev',veg:true,popular:false,rating:4.6,serves:'6 puris'},
+    // ── SOUTH INDIAN ──
+    {id:19,name:'Masala Dosa',img:'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400&q=80',cat:'South Indian',price:129,desc:'Crispy rice crepe filled with spiced potato masala, served with sambar & chutneys',veg:true,popular:true,rating:4.8,serves:'1 dosa'},
+    {id:20,name:'Idli Sambar',img:'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400&q=80',cat:'South Indian',price:99,desc:'Soft steamed rice cakes with piping hot lentil sambar & coconut chutney',veg:true,popular:false,rating:4.6,serves:'4 idli'},
+    {id:21,name:'Uttapam',img:'https://images.unsplash.com/photo-1630383249896-424e482df921?w=400&q=80',cat:'South Indian',price:119,desc:'Thick savory pancake topped with onions, tomato & green chilli',veg:true,popular:false,rating:4.4,serves:'1 large'},
+    // ── BREADS ──
+    {id:22,name:'Garlic Naan',img:'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&q=80',cat:'Breads',price:49,desc:'Freshly baked tandoor bread brushed with garlic butter & coriander',veg:true,popular:false,rating:4.5,serves:'1 piece'},
+    {id:23,name:'Butter Roti',img:'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=80',cat:'Breads',price:29,desc:'Soft whole wheat roti fresh off the tawa with a dollop of butter',veg:true,popular:false,rating:4.3,serves:'2 pieces'},
+    {id:24,name:'Stuffed Paratha',img:'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&q=80',cat:'Breads',price:79,desc:'Flaky whole wheat paratha stuffed with spiced aloo or paneer, with curd',veg:true,popular:true,rating:4.7,serves:'2 parathas'},
+    // ── DESSERTS ──
+    {id:25,name:'Gulab Jamun',img:'https://images.unsplash.com/photo-1601303516534-bf4e2b9c8bae?w=400&q=80',cat:'Desserts',price:69,desc:'Soft khoya milk dumplings soaked in rose-cardamom sugar syrup',veg:true,popular:false,rating:4.5,serves:'2 pieces'},
+    {id:26,name:'Rasgulla',img:'https://images.unsplash.com/photo-1601303516534-bf4e2b9c8bae?w=400&q=80',cat:'Desserts',price:59,desc:'Spongy chenna balls in light sugar syrup — Bengali classic',veg:true,popular:false,rating:4.4,serves:'2 pieces'},
+    {id:27,name:'Kheer',img:'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=400&q=80',cat:'Desserts',price:89,desc:'Creamy slow-cooked rice pudding with cardamom, saffron & dry fruits',veg:true,popular:true,rating:4.7,serves:'1 bowl'},
+    {id:28,name:'Chocolate Brownie',img:'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=400&q=80',cat:'Desserts',price:99,desc:'Warm fudgy dark chocolate brownie with vanilla ice cream & chocolate drizzle',veg:true,popular:true,rating:4.8,serves:'1 piece'},
+    // ── HOT DRINKS ──
+    {id:29,name:'Masala Chai',img:'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80',cat:'Hot Drinks',price:39,desc:'Classic Indian spiced tea with ginger, cardamom & tulsi leaves',veg:true,popular:false,rating:4.4,serves:'250 ml'},
+    {id:30,name:'Filter Coffee',img:'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80',cat:'Hot Drinks',price:49,desc:'Strong South Indian filter coffee with frothy milk — served in traditional dabara',veg:true,popular:true,rating:4.7,serves:'200 ml'},
+    {id:31,name:'Cappuccino',img:'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400&q=80',cat:'Hot Drinks',price:89,desc:'Rich espresso with velvety steamed milk foam, dusted with cocoa',veg:true,popular:false,rating:4.5,serves:'250 ml'},
+    // ── COLD DRINKS & SHAKES ──
+    {id:32,name:'Mango Lassi',img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80',cat:'Cold Drinks',price:79,desc:'Thick chilled yogurt blended with fresh Alphonso mango pulp',veg:true,popular:true,rating:4.7,serves:'300 ml'},
+    {id:33,name:'Rose Sharbat',img:'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&q=80',cat:'Cold Drinks',price:59,desc:'Chilled rose syrup drink with basil seeds and a hint of kewra',veg:true,popular:false,rating:4.3,serves:'300 ml'},
+    {id:34,name:'Chocolate Milkshake',img:'https://images.unsplash.com/photo-1572490122747-3968b75cc699?w=400&q=80',cat:'Cold Drinks',price:99,desc:'Thick blended milkshake with premium cocoa, ice cream & whipped cream',veg:true,popular:true,rating:4.8,serves:'350 ml'},
+    {id:35,name:'Fresh Lime Soda',img:'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&q=80',cat:'Cold Drinks',price:49,desc:'Sparkling soda with freshly squeezed lime juice — sweet, salted, or masala',veg:true,popular:false,rating:4.5,serves:'300 ml'},
+    {id:36,name:'Strawberry Mocktail',img:'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=400&q=80',cat:'Cold Drinks',price:119,desc:'Blended fresh strawberries with mint, lime & sparkling water — garnished with fruit',veg:true,popular:true,rating:4.7,serves:'350 ml'},
+    // ── COMBOS ──
+    {id:37,name:'Family Feast',img:'https://images.unsplash.com/photo-1567337710282-00832b415979?w=400&q=80',cat:'Combos',price:799,desc:'2 main course + 4 rotis + biryani + 2 desserts + 4 drinks — feeds 4 people',veg:false,popular:true,rating:4.9,serves:'4 persons'},
+    {id:38,name:'Veg Thali',img:'https://images.unsplash.com/photo-1567337710282-00832b415979?w=400&q=80',cat:'Combos',price:279,desc:'Complete meal — dal, 2 sabzi, steamed rice, roti, raita & gulab jamun',veg:true,popular:true,rating:4.8,serves:'1 full meal'},
+    {id:39,name:'Couple Combo',img:'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80',cat:'Combos',price:449,desc:'2 starters + 2 mains + 2 breads + 2 desserts + 2 drinks — perfect for two',veg:false,popular:true,rating:4.8,serves:'2 persons'},
+    {id:40,name:'Student Special',img:'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&q=80',cat:'Combos',price:149,desc:'1 main + 2 rotis + dal + rice + 1 drink — budget-friendly full meal',veg:true,popular:true,rating:4.6,serves:'1 person'},
+  ],
+  orders:[],
+  streamUrl:'',nextOrderId:1,nextUserId:3
+};
+let currentUser=null,cart=[],authMode='login',activeCat='All';
+const SL=['Order Placed','Confirmed','Cooking','On the Way','Delivered'];
+const SI=['📝','✅','👨‍🍳','🛵','🎉'];
+
+// ══ STORAGE — single key, always overwrites cleanly ══
+function saveDB(){
+  try{
+    localStorage.setItem('sl_db', JSON.stringify({
+      users: DB.users,
+      orders: DB.orders,
+      nextOrderId: DB.nextOrderId,
+      nextUserId: DB.nextUserId,
+      streamUrl: DB.streamUrl
+    }));
+  }catch(e){}
+}
+function loadDB(){
+  try{
+    const raw = localStorage.getItem('sl_db');
+    if(!raw) return; // first visit — keep defaults
+    const saved = JSON.parse(raw);
+    // Fully replace from saved data — this is the source of truth
+    if(saved.users  && saved.users.length)  DB.users        = saved.users;
+    if(saved.orders && saved.orders.length) DB.orders       = saved.orders;
+    if(saved.nextOrderId) DB.nextOrderId = saved.nextOrderId;
+    if(saved.nextUserId)  DB.nextUserId  = saved.nextUserId;
+    if(saved.streamUrl)   DB.streamUrl   = saved.streamUrl;
+  }catch(e){
+    // Corrupted data — clear and start fresh
+    try{ localStorage.removeItem('sl_db'); }catch(e2){}
+  }
+}
+function saveSession(userId){
+  try{ localStorage.setItem('sl_sess', String(userId)); }catch(e){}
+}
+function clearSession(){
+  try{ localStorage.removeItem('sl_sess'); }catch(e){}
+}
+function restoreSession(){
+  try{
+    const sid = localStorage.getItem('sl_sess');
+    if(!sid) return false;
+    const user = DB.users.find(u => u.id === parseInt(sid));
+    if(!user) return false;
+    currentUser = user;
+    user.online = true;
+    user.loginCount = (user.loginCount||0) + 1;
+    user.lastLogin = new Date().toISOString();
+    saveDB();
+    return true;
+  }catch(e){ return false; }
+}
+
+// ══ AUTH ══
+function authTab(m){
+  authMode = m;
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(i===0&&m==='login')||(i===1&&m==='register')));
+  document.getElementById('an-w').style.display = m==='register'?'block':'none';
+  document.getElementById('ae-w').style.display = m==='register'?'block':'none';
+  document.getElementById('asub').textContent   = m==='login'?'Login':'Create Account';
+  document.getElementById('amsg').textContent   = '';
+}
+
+function doAuth(){
+  const uVal = document.getElementById('au').value.trim();
+  const pVal = document.getElementById('ap').value.trim();
+  const msg  = document.getElementById('amsg');
+  msg.textContent = '';
+
+  if(!uVal || !pVal){ msg.textContent='Please fill all fields.'; return; }
+
+  if(authMode === 'login'){
+    // Search in-memory DB (includes all registered users from this session)
+    const user = DB.users.find(x => x.username===uVal && x.password===pVal);
+    if(!user){
+      msg.textContent = 'Wrong username or password. Try again.';
+      return;
+    }
+    user.online    = true;
+    user.loginCount = (user.loginCount||0)+1;
+    user.lastLogin  = new Date().toISOString();
+    currentUser     = user;
+    saveDB();
+    saveSession(user.id);
+    launchApp();
+
+  } else {
+    // Register
+    const nVal = document.getElementById('an').value.trim();
+    const eVal = document.getElementById('ae').value.trim();
+    if(!nVal || !eVal){ msg.textContent='Please fill all fields.'; return; }
+    if(DB.users.find(x => x.username===uVal)){
+      msg.textContent = 'Username taken — please choose another or login.';
+      return;
+    }
+    const nu = {
+      id: DB.nextUserId++,
+      username: uVal, password: pVal,
+      name: nVal,     email: eVal,
+      role: 'user',
+      joinedAt: new Date().toISOString(),
+      loginCount: 1,
+      lastLogin: new Date().toISOString(),
+      online: true
+    };
+    DB.users.push(nu);
+    currentUser = nu;
+    saveDB();
+    saveSession(nu.id);
+    launchApp();
+  }
+}
+
+function launchApp(){
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display         = 'block';
+  document.getElementById('top-av').textContent        = currentUser.name[0].toUpperCase();
+  document.getElementById('top-av').title              = currentUser.name;
+  const isOwner = currentUser.role==='admin' || currentUser.role==='owner';
+  document.getElementById('admin-nav').style.display   = isOwner ? 'inline-block' : 'none';
+  renderMenu(); renderHomePopular(); goPage('home');
+}
+
+function doLogout(){
+  if(currentUser){ currentUser.online = false; saveDB(); }
+  clearSession();
+  currentUser = null;
+  cart        = [];
+  updateCartUI();
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display         = 'none';
+  document.getElementById('au').value  = '';
+  document.getElementById('ap').value  = '';
+  document.getElementById('amsg').textContent = '';
+  document.getElementById('admin-nav').style.display = 'none';
+}
+
+// ══ NAV ══
+function goPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  document.getElementById('page-'+n).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l=>{if(l.textContent.trim().toLowerCase().includes(n.substring(0,4)))l.classList.add('active');});
+  if(n==='orders')renderOrders();
+  if(n==='profile')renderProfile();
+  if(n==='admin')renderAdmin();
+}
+
+// ══ MENU ══
+function renderHomePopular(){document.getElementById('home-popular').innerHTML=DB.menu.filter(m=>m.popular).map(card).join('');}
+function renderMenu(){
+  const cats=['All',...new Set(DB.menu.map(m=>m.cat))];
+  document.getElementById('cat-pills').innerHTML=cats.map(c=>`<div class="cat-pill${c===activeCat?' active':''}" onclick="setCat('${c}')">${c}</div>`).join('');
+  const container=document.getElementById('menu-grid');
+  if(activeCat==='All'){
+    // Group by category with section headers
+    const groups={};
+    DB.menu.forEach(item=>{if(!groups[item.cat])groups[item.cat]=[];groups[item.cat].push(item);});
+    const catIcons={'Starters':'🥗','Main Course':'🍛','Rice & Biryani':'🍚','Street Food':'🌮','South Indian':'🥞','Breads':'🫓','Desserts':'🍮','Hot Drinks':'☕','Cold Drinks':'🥤','Combos':'🎁'};
+    container.innerHTML='';
+    container.style.display='block';
+    Object.entries(groups).forEach(([cat,items])=>{
+      const sec=document.createElement('div');
+      sec.className='menu-section';
+      sec.innerHTML=`<div class="menu-section-header"><span class="menu-section-icon">${catIcons[cat]||'🍽️'}</span><span class="menu-section-name">${cat}</span><span class="menu-section-count">${items.length} items</span></div><div class="menu-grid-inner">${items.map(card).join('')}</div>`;
+      container.appendChild(sec);
+    });
+  } else {
+    container.style.display='grid';
+    container.innerHTML=DB.menu.filter(m=>m.cat===activeCat).map(card).join('');
+  }
+}
+function setCat(c){activeCat=c;renderMenu();}
+function card(item){
+  const inc=cart.find(x=>x.id===item.id);
+  const stars='★'.repeat(Math.floor(item.rating))+'☆'.repeat(5-Math.floor(item.rating));
+  return `<div class="menu-card-3d" onmousemove="tilt(this,event)" onmouseleave="untilt(this)">
+    <div class="menu-img-3d" style="padding:0;overflow:hidden;">
+      <img src="${item.img}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;transition:transform .4s;" onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform='scale(1)'">
+      <div class="veg-tag ${item.veg?'v':'nv'}" style="position:absolute;top:12px;right:12px;">${item.veg?'🟢 VEG':'🔴 NON-VEG'}</div>
+      <div style="position:absolute;bottom:10px;left:12px;background:rgba(0,0,0,.65);border-radius:8px;padding:3px 10px;font-size:11px;color:var(--gold);font-weight:700;">${stars} ${item.rating}</div>
+    </div>
+    <div class="menu-body-3d">
+      <div class="menu-name-3d">${item.name}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:5px;">🍽️ Serves ${item.serves}</div>
+      <div class="menu-desc-3d">${item.desc}</div>
+      <div class="menu-footer-3d">
+        <div>
+          <div class="menu-price-3d">₹${item.price}<sub>/plate</sub></div>
+          <div style="font-size:10px;color:var(--green);margin-top:2px;">Free delivery</div>
+        </div>
+        <button class="add-btn-3d${inc?' added':''}" onclick="addCart(${item.id})">${inc?'✓ Added':'Add +'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// 3D TILT
+function tilt(el,e){
+  const r=el.getBoundingClientRect();
+  const x=((e.clientX-r.left)/r.width-.5)*22;
+  const y=-((e.clientY-r.top)/r.height-.5)*22;
+  el.style.transform=`translateY(-12px) rotateX(${y}deg) rotateY(${x}deg) scale(1.03)`;
+  el.style.boxShadow=`${-x*1.5}px ${y*1.5}px 60px rgba(0,0,0,.6),0 0 40px rgba(240,165,0,.09)`;
+}
+function untilt(el){el.style.transform='';el.style.boxShadow='';}
+
+// ══ CART ══
+function addCart(id){
+  const item=DB.menu.find(x=>x.id===id),ex=cart.find(x=>x.id===id);
+  if(ex)ex.qty++;else cart.push({...item,qty:1});
+  updateCartUI();renderMenu();renderHomePopular();
+  toast(`🍽️ ${item.name} added!`);
+}
+function chgQty(id,d){const i=cart.findIndex(x=>x.id===id);if(i===-1)return;cart[i].qty+=d;if(cart[i].qty<=0)cart.splice(i,1);updateCartUI();}
+function updateCartUI(){
+  const total=cart.reduce((s,x)=>s+x.price*x.qty,0);
+  document.getElementById('cart-count').textContent=cart.reduce((s,x)=>s+x.qty,0);
+  document.getElementById('cart-total-el').textContent=`₹${total}`;
+  const el=document.getElementById('cart-items-el');
+  if(!cart.length){el.innerHTML=`<div class="cart-empty"><span class="cart-empty-icon">🛒</span><div style="font-weight:600">Cart is empty</div><div style="font-size:12px;margin-top:6px;color:var(--muted)">Add dishes from the menu</div></div>`;return;}
+  el.innerHTML=cart.map(x=>`<div class="cart-item"><div class="cart-item-emoji" style="font-size:0;width:44px;height:44px;border-radius:10px;overflow:hidden;flex-shrink:0"><img src="${x.img||''}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='🍽️';this.parentElement.style.fontSize='24px'"></div><div class="cart-item-info"><div class="cart-item-name">${x.name}</div><div class="cart-item-price">₹${x.price*x.qty}</div></div><div class="qty-ctrl"><button class="qty-btn" onclick="chgQty(${x.id},-1)">−</button><div class="qty-num">${x.qty}</div><button class="qty-btn" onclick="chgQty(${x.id},1)">+</button></div></div>`).join('');
+}
+function toggleCart(){document.getElementById('cart-drawer').classList.toggle('open');document.getElementById('cart-overlay').classList.toggle('open');}
+
+// ══ PAYMENT ══
+let selectedPayMethod = null;
+
+function placeOrder(){
+  if(!cart.length){toast('Cart is empty!');return;}
+  toggleCart();
+  openPayModal();
+}
+
+function openPayModal(){
+  const total=cart.reduce((s,x)=>s+x.price*x.qty,0);
+  document.getElementById('pay-amount-display').textContent=`Total: ₹${total}`;
+  document.getElementById('pay-sub-amt').textContent=`₹${total}`;
+  document.getElementById('pay-final-amt').textContent=`₹${total}`;
+  // pre-fill name from user
+  document.getElementById('pay-name').value=currentUser.name||'';
+  document.getElementById('pay-msg').textContent='';
+  // summary
+  document.getElementById('pay-summary').innerHTML=cart.map(x=>`<div class="pay-sum-item"><span>${x.name} ×${x.qty}</span><span>₹${x.price*x.qty}</span></div>`).join('');
+  // reset method selection
+  selectedPayMethod=null;
+  document.querySelectorAll('.pay-method').forEach(m=>m.classList.remove('selected'));
+  document.querySelectorAll('.pm-check').forEach(c=>{c.textContent='';});
+  ['card-details-section','upi-section','paytm-section','netbank-section'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('pay-modal').classList.add('open');
+}
+
+function closePayModal(){document.getElementById('pay-modal').classList.remove('open');}
+
+function selectPay(method){
+  selectedPayMethod=method;
+  document.querySelectorAll('.pay-method').forEach(m=>m.classList.remove('selected'));
+  document.getElementById('pm-'+method).classList.add('selected');
+  // hide all sub-sections
+  ['card-details-section','upi-section','paytm-section','netbank-section'].forEach(id=>document.getElementById(id).style.display='none');
+  if(method==='card') document.getElementById('card-details-section').style.display='block';
+  if(method==='upi') document.getElementById('upi-section').style.display='block';
+  if(method==='paytm') document.getElementById('paytm-section').style.display='block';
+  if(method==='netbank') document.getElementById('netbank-section').style.display='block';
+  // update button
+  const labels={upi:'Pay via UPI 📱',paytm:'Pay via Paytm 💙',card:'Pay Securely 💳',netbank:'Pay via Net Banking 🏦',cod:'Confirm COD Order 💵'};
+  document.getElementById('pay-confirm-btn').textContent=labels[method]||'Pay Now 🔐';
+  document.getElementById('pay-msg').textContent='';
+}
+
+function fmtCard(input){
+  let v=input.value.replace(/\D/g,'').substring(0,16);
+  input.value=v.replace(/(.{4})/g,'$1 ').trim();
+}
+
+function confirmPayment(){
+  const name=document.getElementById('pay-name').value.trim();
+  const addr=document.getElementById('pay-addr').value.trim();
+  const phone=document.getElementById('pay-phone').value.trim();
+  const pin=document.getElementById('pay-pin').value.trim();
+  const msg=document.getElementById('pay-msg');
+
+  if(!name||!addr||!phone||!pin){msg.textContent='Please fill in all delivery details.';return;}
+  if(!selectedPayMethod){msg.textContent='Please select a payment method.';return;}
+
+  // Method-specific validation
+  if(selectedPayMethod==='card'){
+    const cn=document.getElementById('card-num').value.replace(/\s/g,'');
+    const ce=document.getElementById('card-exp').value;
+    const cv=document.getElementById('card-cvv').value;
+    const cname=document.getElementById('card-name').value.trim();
+    if(cn.length<16||!ce||cv.length<3||!cname){msg.textContent='Please enter complete card details.';return;}
+  }
+  if(selectedPayMethod==='upi'){
+    const uid=document.getElementById('upi-id').value.trim();
+    if(!uid||!uid.includes('@')){msg.textContent='Please enter a valid UPI ID (e.g. name@upi).';return;}
+  }
+  if(selectedPayMethod==='paytm'){
+    const pnum=document.getElementById('paytm-num').value.trim();
+    if(!pnum||pnum.length<10){msg.textContent='Please enter your Paytm mobile number.';return;}
+  }
+  if(selectedPayMethod==='netbank'){
+    const bank=document.getElementById('bank-sel').value;
+    if(!bank){msg.textContent='Please select your bank.';return;}
+  }
+
+  // Simulate payment processing
+  const btn=document.getElementById('pay-confirm-btn');
+  btn.textContent='Processing... ⏳';
+  btn.disabled=true;
+
+  setTimeout(()=>{
+    // Create order
+    const order={
+      id:`ORD-${String(DB.nextOrderId++).padStart(3,'0')}`,
+      userId:currentUser.id,
+      items:cart.map(x=>({name:x.name,qty:x.qty,price:x.price})),
+      total:cart.reduce((s,x)=>s+x.price*x.qty,0),
+      status:0,
+      payMethod:selectedPayMethod,
+      deliveryAddr:addr,
+      time:new Date().toISOString()
+    };
+    DB.orders.unshift(order);
+    saveDB();
+    cart=[];updateCartUI();renderMenu();renderHomePopular();
+
+    btn.textContent='Pay Now 🔐';
+    btn.disabled=false;
+    closePayModal();
+    showSuccess(order);
+
+    // Auto-progress order
+    let st=0;const iv=setInterval(()=>{st++;order.status=st;if(st>=4)clearInterval(iv);},8000);
+  }, 1800);
+}
+
+function showSuccess(order){
+  const methods={upi:'via UPI',paytm:'via Paytm',card:'via Card',netbank:'via Net Banking',cod:'(Cash on Delivery)'};
+  document.getElementById('success-id').textContent=order.id;
+  document.getElementById('success-sub').textContent=`₹${order.total} paid ${methods[order.payMethod]||''} • Watch it cook live! 🎥`;
+  document.getElementById('success-modal').classList.add('open');
+}
+
+function closeSuccess(){
+  document.getElementById('success-modal').classList.remove('open');
+  goPage('orders');
+  // Small delay so the order status has progressed to "Cooking" before render
+  setTimeout(renderOrders, 500);
+}
+function renderOrders(){
+  const my=DB.orders.filter(o=>currentUser.role==='admin'||o.userId===currentUser.id);
+  const el=document.getElementById('orders-list');
+  if(!my.length){
+    el.innerHTML=`<div style="text-align:center;padding:80px 20px;">
+      <div style="font-size:64px;margin-bottom:16px">🍽️</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">No orders yet</div>
+      <div style="color:var(--muted);font-size:14px">Browse the menu and place your first order!</div>
+      <button class="btn-3d" style="margin-top:24px;padding:14px 32px" onclick="goPage('menu')">View Menu 🍛</button>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = my.map(o => {
+    const isCooking = o.status === 2; // "Cooking" step
+    const isActive  = o.status < 4;
+
+    // Step tracker
+    const steps = SL.map((lbl, i) => {
+      const done   = i < o.status;
+      const active = i === o.status;
+      const icon   = done || active ? SI[i] : '○';
+      const line   = i < SL.length-1
+        ? `<div class="ostep-line${done?' done':''}"></div>` : '';
+      return `<div class="ostep ${done?'done':active?'active':''}">
+        ${line}
+        <div class="ostep-dot">${icon}</div>
+        <div class="ostep-label">${lbl}</div>
+      </div>`;
+    }).join('');
+
+    // Live kitchen embed — shown ONLY during "Cooking" status
+    const liveKitchenBlock = isCooking ? `
+      <div class="order-live-kitchen">
+        <div class="order-live-header">
+          <div class="order-live-title">
+            <div class="live-pulse-dot"></div>
+            👨‍🍳 Your food is being cooked — Watch it LIVE!
+          </div>
+          <div class="order-live-badge">🔴 LIVE</div>
+        </div>
+        ${DB.streamUrl
+          ? `<div class="order-live-frame">
+               <iframe src="${DB.streamUrl}?autoplay=1&mute=1" allow="autoplay;encrypted-media" allowfullscreen
+                 style="width:100%;height:100%;border:none;display:block;border-radius:0 0 16px 16px"></iframe>
+             </div>`
+          : `<div class="order-live-offline">
+               <div style="font-size:48px;margin-bottom:12px">📹</div>
+               <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px">Kitchen Cam Coming Soon</div>
+               <div style="font-size:13px;color:var(--muted);max-width:320px;line-height:1.6">
+                 The restaurant hasn't connected a live stream yet.<br>
+                 Your food is still being prepared with love! 🍲
+               </div>
+             </div>`
+        }
+        <div class="order-live-footer">
+          <span>🕐 Est. ready in <strong>8–12 min</strong></span>
+          <span>📍 ${o.deliveryAddr||'Your address'}</span>
+        </div>
+      </div>` : '';
+
+    // Status message bar
+    const statusColors = ['#9080a0','#00e676','#f0a500','#ff6b35','#9c6bff'];
+    const statusMsgs = [
+      '📝 Order received! Kitchen is confirming…',
+      '✅ Confirmed! Chef is about to start cooking.',
+      '👨‍🍳 Cooking now — watch your food being made live!',
+      '🛵 Out for delivery — on the way to you!',
+      '🎉 Delivered! Enjoy your meal. Rate us below.'
+    ];
+
+    return `<div class="order-card${isActive?' order-card-active':''}">
+
+      <!-- Order Header -->
+      <div class="order-hdr">
+        <div>
+          <div class="order-id">${o.id}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${fmt(o.time)}</div>
+        </div>
+        <div style="text-align:right">
+          <div class="order-total-txt">₹${o.total}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${{upi:'📱 UPI',paytm:'💙 Paytm',card:'💳 Card',netbank:'🏦 NetBank',cod:'💵 COD'}[o.payMethod]||''}</div>
+        </div>
+      </div>
+
+      <!-- Status Message -->
+      <div class="order-status-msg" style="border-left:3px solid ${statusColors[o.status]}">
+        ${statusMsgs[o.status]}
+      </div>
+
+      <!-- Step Tracker -->
+      <div class="order-steps">${steps}</div>
+
+      <!-- 🔴 LIVE KITCHEN — only during Cooking -->
+      ${liveKitchenBlock}
+
+      <!-- Items -->
+      <div class="order-items-txt">${o.items.map(i=>`${i.name} ×${i.qty}`).join(' · ')}</div>
+
+    </div>`;
+  }).join('');
+
+  // Auto-refresh orders page every 5s so status updates appear live
+  clearTimeout(window._ordRefresh);
+  if(document.getElementById('page-orders').classList.contains('active')){
+    window._ordRefresh = setTimeout(renderOrders, 5000);
+  }
+}
+
+// ══ PROFILE ══
+function renderProfile(){
+  const my=DB.orders.filter(o=>o.userId===currentUser.id),spent=my.reduce((s,o)=>s+o.total,0);
+  document.getElementById('prof-av').textContent=currentUser.name[0].toUpperCase();
+  document.getElementById('prof-name').textContent=currentUser.name;
+  document.getElementById('prof-email').textContent=currentUser.email;
+  document.getElementById('prof-orders').textContent=my.length;
+  document.getElementById('prof-spent').textContent=`₹${spent}`;
+  document.getElementById('prof-recent').innerHTML=!my.length?'<div style="color:var(--muted);font-size:13px">No orders yet.</div>':my.slice(0,5).map(o=>`<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);font-size:13px"><div><strong>${o.id}</strong><div style="color:var(--muted);font-size:11px;margin-top:3px">${fmt(o.time)}</div></div><div style="text-align:right"><div style="color:var(--gold);font-weight:800">₹${o.total}</div><div style="font-size:11px;color:var(--muted)">${SL[o.status]}</div></div></div>`).join('');
+}
+
+// ══ STREAM ══
+function loadStream(){setStream(document.getElementById('stream-input').value.trim());}
+function adminStream(){const url=document.getElementById('admin-stream').value.trim();DB.streamUrl=url;document.getElementById('stream-input').value=url;setStream(url);toast('🎥 Stream updated!');}
+function setStream(url){
+  const area=document.getElementById('stream-area'),disp=document.getElementById('stream-url-display');
+  if(!url){area.innerHTML=`<div class="stream-placeholder-3d"><div class="cam-icon">📹</div><div style="font-size:18px;font-weight:700;color:var(--text)">Kitchen Stream Offline</div><div style="font-size:14px;max-width:340px;line-height:1.6">Paste a YouTube Live embed URL to start broadcasting</div></div>`;disp.textContent='No stream connected';return;}
+  area.innerHTML=`<iframe style="width:100%;aspect-ratio:16/9;border:none;display:block" src="${url}?autoplay=1" allow="autoplay;encrypted-media" allowfullscreen></iframe>`;
+  disp.textContent=url;toast('🔴 You are live!');
+}
+
+// ══ ADMIN (RESTAURANT OWNER VIEW) ══
+function renderAdmin(){
+  const rev=DB.orders.reduce((s,o)=>s+o.total,0);
+  const pend=DB.orders.filter(o=>o.status<4).length;
+  const activeUsers=DB.users.filter(u=>u.online).length;
+  document.getElementById('adm-o').textContent=DB.orders.length;
+  document.getElementById('adm-r').textContent=`₹${rev}`;
+  document.getElementById('adm-u').textContent=DB.users.length;
+  document.getElementById('adm-p').textContent=pend;
+
+  // Active users badge
+  const activeEl=document.getElementById('adm-active');
+  if(activeEl) activeEl.textContent=activeUsers;
+
+  const sc=['#9080a0','#00e676','#f0a500','#ff6b35','#9c6bff'];
+
+  // All orders with user name
+  document.getElementById('admin-orders').innerHTML=!DB.orders.length
+    ?'<div style="color:var(--muted);font-size:13px;padding:16px 0">No orders yet.</div>'
+    :DB.orders.map(o=>{
+      const uname=DB.users.find(u=>u.id===o.userId)?.name||'Unknown';
+      const pm={upi:'📱 UPI',paytm:'💙 Paytm',card:'💳 Card',netbank:'🏦 NetBank',cod:'💵 COD'}[o.payMethod]||'—';
+      return `<div class="arow">
+        <div class="sdot" style="background:${sc[Math.min(o.status,4)]}"></div>
+        <div style="flex:1">
+          <div style="font-weight:700">${o.id} <span style="font-size:11px;color:var(--muted)">by ${uname}</span></div>
+          <div style="color:var(--muted);font-size:11px;margin-top:2px">${fmt(o.time)} · ${pm}</div>
+        </div>
+        <div style="color:var(--gold);font-weight:700;margin-right:8px;white-space:nowrap">₹${o.total}</div>
+        <select class="ssel" onchange="updStatus('${o.id}',this.value)">
+          ${SL.map((l,i)=>`<option value="${i}"${o.status===i?' selected':''}>${l}</option>`).join('')}
+        </select>
+      </div>`;
+    }).join('');
+
+  // Users list with login count & online status
+  document.getElementById('admin-users').innerHTML=DB.users.map(u=>`
+    <div class="arow">
+      <div style="position:relative;flex-shrink:0">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px">${u.name[0]}</div>
+        <div style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:${u.online?'var(--green)':'var(--border)'};border:2px solid var(--surface)"></div>
+      </div>
+      <div style="flex:1;margin-left:10px">
+        <div style="font-weight:700">${u.name} ${u.role==='admin'?'<span style="font-size:10px;color:var(--red);background:rgba(255,61,90,.1);padding:2px 6px;border-radius:4px">OWNER</span>':''}</div>
+        <div style="color:var(--muted);font-size:11px;margin-top:2px">${u.username} · Logins: ${u.loginCount||0} · Last: ${u.lastLogin?fmt(u.lastLogin):'Never'}</div>
+      </div>
+      <div style="text-align:right;font-size:12px">
+        <div style="color:${u.online?'var(--green)':'var(--muted)'};font-weight:600">${u.online?'🟢 Online':'⚫ Offline'}</div>
+        <div style="color:var(--muted);margin-top:2px">${DB.orders.filter(o=>o.userId===u.id).length} orders</div>
+      </div>
+    </div>`).join('');
+
+  if(DB.streamUrl) document.getElementById('admin-stream').value=DB.streamUrl;
+}
+function updStatus(id,st){
+  const o=DB.orders.find(x=>x.id===id);
+  if(o){o.status=parseInt(st);saveDB();toast(`${id} → ${SL[st]}`);}
+}
+
+// ══ EXCEL EXPORT ══
+function exportToExcel(){
+  const wb=[];
+
+  // Sheet 1: Orders
+  const ordRows=[['Order ID','Customer','Phone','Address','Items','Total (₹)','Payment','Status','Time']];
+  DB.orders.forEach(o=>{
+    const uname=DB.users.find(u=>u.id===o.userId)?.name||'Unknown';
+    ordRows.push([
+      o.id, uname,
+      DB.users.find(u=>u.id===o.userId)?.email||'',
+      o.deliveryAddr||'—',
+      o.items.map(i=>`${i.name}×${i.qty}`).join(', '),
+      o.total,
+      {upi:'UPI',paytm:'Paytm',card:'Card',netbank:'Net Banking',cod:'COD'}[o.payMethod]||'—',
+      SL[o.status],
+      fmt(o.time)
+    ]);
+  });
+
+  // Sheet 2: Users
+  const usrRows=[['ID','Name','Username','Email','Role','Login Count','Last Login','Joined','Total Orders','Total Spent (₹)']];
+  DB.users.forEach(u=>{
+    const myOrds=DB.orders.filter(o=>o.userId===u.id);
+    usrRows.push([
+      u.id, u.name, u.username, u.email||'',
+      u.role==='admin'?'Restaurant Owner':'Customer',
+      u.loginCount||0,
+      u.lastLogin?fmt(u.lastLogin):'Never',
+      fmt(u.joinedAt),
+      myOrds.length,
+      myOrds.reduce((s,o)=>s+o.total,0)
+    ]);
+  });
+
+  // Build XLSX manually using SheetJS-like CSV approach wrapped in Excel XML
+  const toCSV=rows=>rows.map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+
+  const xmlOrders=buildXMLSheet(ordRows,'Orders');
+  const xmlUsers=buildXMLSheet(usrRows,'Users');
+
+  const xml=`<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="header"><Font ss:Bold="1"/><Interior ss:Color="#F0A500" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="gold"><Font ss:Color="#B8860B" ss:Bold="1"/></Style>
+ </Styles>
+${xmlOrders}${xmlUsers}
+</Workbook>`;
+
+  const blob=new Blob([xml],{type:'application/vnd.ms-excel'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`SpiceLane_Report_${new Date().toISOString().slice(0,10)}.xls`;
+  a.click();
+  toast('📊 Excel report downloaded!');
+}
+
+function buildXMLSheet(rows, name){
+  const cells=rows.map((row,ri)=>
+    '<Row>'+row.map(c=>`<Cell${ri===0?' ss:StyleID="header"':''}><Data ss:Type="${typeof c==='number'?'Number':'String'}">${String(c||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</Data></Cell>`).join('')+'</Row>'
+  ).join('');
+  return `<Worksheet ss:Name="${name}"><Table>${cells}</Table></Worksheet>\n`;
+}
+
+// ══ UTILS ══
+function fmt(iso){const d=new Date(iso);return d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.className='show';clearTimeout(window._tt);window._tt=setTimeout(()=>t.className='',2800);}
+
+// ══ BOOT ══
+loadDB();
+updateCartUI();
+// Always hide app by default
+document.getElementById('app').style.display='none';
+// Try auto-login from saved session
+if(restoreSession()){
+  launchApp();
+} else {
+  // No session — show login screen
+  document.getElementById('auth-screen').style.display='flex';
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && document.getElementById('auth-screen').style.display==='flex') doAuth();
+});
+</script>
+</body>
+</html>

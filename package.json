@@ -1,0 +1,13 @@
+{
+  "name": "spicelane-restaurant",
+  "version": "1.0.0",
+  "description": "SpiceLane — 3D Restaurant Website with Live Kitchen, Ordering & Payments",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["restaurant", "food", "ordering", "spicelane"],
+  "author": "SpiceLane",
+  "license": "MIT"
+}
