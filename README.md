@@ -1,4 +1,4 @@
-# 🍛 SpiceLane — Restaurant Website
+# 🍛 Sharmahouse — Restaurant Website
 
 A full-featured 3D restaurant website with live kitchen streaming, online ordering, and payment integration.
 
@@ -9,7 +9,7 @@ A full-featured 3D restaurant website with live kitchen streaming, online orderi
 ### Option 1 — Easiest: Live Server (No Node needed)
 
 1. Open VS Code
-2. Open this folder: **File → Open Folder → select `spicelane-project`**
+2. Open this folder: **File → Open Folder → select `Sharmahouse-project`**
 3. Install the **Live Server** extension (VS Code will prompt you, or search it in Extensions tab)
 4. Right-click on `index.html` in the file explorer
 5. Click **"Open with Live Server"**
@@ -97,7 +97,7 @@ Or click **Register** to create your own account — it's saved automatically.
 
 Open `index.html` in VS Code and search for:
 
-- **Restaurant name**: search `SpiceLane`
+- **Restaurant name**: search `Sharmahouse`
 - **Phone number**: search `1234565678`
 - **Address**: search `Chandni Chowk`
 - **Social links**: search `footer-socials`
