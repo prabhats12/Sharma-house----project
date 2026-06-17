@@ -47,7 +47,7 @@ npm start
 
 1. Open VS Code
 2. Press **F5** or go to **Run → Start Debugging**
-3. Select **"🍛 Run SpiceLane Server"**
+3. Select **"🍛 Run Sharmahouse Server"**
 4. Open browser at: **http://localhost:3000**  ✅
 
 ---
@@ -55,7 +55,7 @@ npm start
 ## 📁 Project Files
 
 ```
-spicelane-project/
+sharmahouse-project/
 ├── index.html        ← Main website (all-in-one)
 ├── server.js         ← Node.js local server
 ├── package.json      ← Project config
